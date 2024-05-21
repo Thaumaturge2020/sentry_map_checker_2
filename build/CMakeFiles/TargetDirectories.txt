@@ -1,0 +1,3 @@
+/home/red-sakura/GIT/point_choose_program/build/CMakeFiles/sentry_map_generator.dir
+/home/red-sakura/GIT/point_choose_program/build/CMakeFiles/edit_cache.dir
+/home/red-sakura/GIT/point_choose_program/build/CMakeFiles/rebuild_cache.dir
