@@ -40,6 +40,10 @@ class PointChooser{
 	std::map<int,std::vector< int > > point_map;
 	double save_rate_x;
 	double save_rate_y;
+
+	double expected_height;
+	double expected_width;
+
 	PointChooser(){
 		mode = 0;
 		choose_id = 0;
@@ -49,6 +53,11 @@ class PointChooser{
 	}
 
 	std::vector<cv::Scalar> color_array;
+
+	void set_hw(double height,double width){
+		expected_height = height;
+		expected_width = width;
+	}
 
 	void color_init(){
 		color_array.push_back(cv::Scalar(0,0,255));
@@ -228,7 +237,7 @@ class PointChooser{
 					auto point = point_set[point_id];
 					double X,Y;
 					X = 1.*point.first/save_rate_x;
-					Y = 1.*point.second/save_rate_y;
+					Y = expected_height - 1.*point.second/save_rate_y;
 					++it;
 					fprintf(file,"[%.2lf,%.2lf]",X,Y);
 					if(it!=vec.end())
@@ -267,7 +276,7 @@ class PointChooser{
 			point_map[CNT] = empty;
 			for(auto position:position_vector){
 				std::pair<double,double> position_to,pdi_to;
-				position_to = std::pair<double,double>(position.first * save_rate_x,position.second * save_rate_y);
+				position_to = std::pair<double,double>(position.first * save_rate_x,(expected_height - position.second) * save_rate_y);
 				for(auto pdi:point_set){
 					pdi_to = std::pair<double,double>(pdi.second.first,pdi.second.second);
 					if(get_distance(pdi_to,position_to) < eps){
@@ -277,6 +286,7 @@ class PointChooser{
 				}
 				now_id = point_set.size();
 				point_set[now_id] = position_to;
+				++total_point_num;
 				S:;
 				if(std::find(point_map[CNT].begin(),point_map[CNT].end(),now_id) == point_map[CNT].end())
 				point_map[CNT].push_back(now_id);
@@ -300,8 +310,12 @@ void mouse_callback(int event,int x,int y,int flags,void *userdata){
 int main(){
 
 	const auto toml_file = toml::parse("../config/config.toml");
+	
+	std::string input_img_url = toml::find<std::string>(toml_file,"input_img_url"),
+				output_toml_url = toml::find<std::string>(toml_file,"output_toml_url"),
+				map_saver_url = toml::find<std::string>(toml_file,"map_saver_url");
 
-	cv::Mat field_map = cv::imread("../img/input/1.jpg");
+	cv::Mat field_map = cv::imread(input_img_url);
 
 	cv::namedWindow("DecisionArea",cv::WINDOW_AUTOSIZE);
 	point_chooser = PointChooser();
@@ -310,6 +324,11 @@ int main(){
 		expected_height = toml::find<int>(toml_file,"expected_height");
 
 	point_chooser.set_save_rate(1.*field_map.cols/expected_width,1.*field_map.rows/expected_height);
+	point_chooser.set_hw(expected_height,expected_width);
+
+	if(output_toml_url != "none_url")
+	point_chooser.load_map_toml_file(output_toml_url);
+
 
 	point_chooser.color_init();
 	point_chooser.shallow_init_map(field_map);
@@ -339,6 +358,6 @@ int main(){
 			point_chooser.mode_switch(type);
 		}
 	}
-	point_chooser.save_map("../img/output/1");
+	point_chooser.save_map(map_saver_url);
 	return 0;
 }

@@ -1,2 +1,5 @@
 expected_width = 28
 expected_height = 15
+input_img_url = "../img/input/1.png"
+output_toml_url = "../img/output/1.txt"
+map_saver_url = "../img/output/1"
